@@ -2,7 +2,7 @@ const express=require('express');
 const axios=require('axios');
 const cors=require('cors')
 
-const api_key='deeccd04c33f06f85a65c6dc80c0281a';
+const api_key='6a1215c19cbaa16ecc3ce5ecfde3c098';
 
 const app=express();
 const PORT=3000;
@@ -18,7 +18,7 @@ app.use(express.json());
   try {
     const response = await axios.get('https://api.metalpriceapi.com/v1/latest', {
       params: {
-        api_key: 'deeccd04c33f06f85a65c6dc80c0281a',
+        api_key: '6a1215c19cbaa16ecc3ce5ecfde3c098',
         base: country,
         currencies: 'EUR,XAU,XAG',
       },
@@ -83,13 +83,42 @@ const karatType={
     const GoldPrice=unitType[unit]*karatType[karat];
     const totalGoldPrice=quantity*GoldPrice;
     const totalAmount=totalGoldPrice.toFixed(2)
-    res.json(`Total Amount of ${quantity} ${unit} ${karat} Gold is ${totalAmount} `);
+    res.json(`Total Amount of ${quantity} ${unit} ${karat} Gold is ${totalAmount} ${country} `);
+    
     console.log(totalAmount);
   } catch (error) {
     console.error('Error fetching metal prices:', error.message);
     res.status(500).json({ error: 'Error fetching metal prices' });
   }
 });
+
+//Getting USD Gold Rate
+
+app.get('/usd-gold-rate', async (req, res) => {
+  
+try {
+const response =  axios.get('https://api.metalpriceapi.com/v1/latest?api_key=894f0a760486c9385dc58d2d5355d7b5&base=USD&currencies=XAU');
+
+console.log(response.data);
+
+const goldOunceRates =1/( response.data.rates.XAU); // 1 ounce
+const goldGramRates = goldOunceRates / 31.10; // 1 gram
+const goldKgRates = goldGramRates*1000;  // 1 Kg
+const goldPennyRates = goldGramRates* 1.5552;  // 1 penny
+const goldGrainRates = goldGramRates*  0.0648;  // 1 grain
+const goldPounderGrams = goldGramRates* 453.5924;  // 1 pound
+const goldBahtrGrams = goldGramRates* 15.2441;  // 1 bhat
+const goldTolaGrams = goldGramRates* 11.6638;   // 1 tola
+
+
+res.json(` ${goldGramRates}, ${goldOunceRates}, ${goldKgRates}, ${goldPennyRates},${goldGrainRates}, ${goldPounderGrams}, ${goldBahtrGrams},  ${goldTolaGrams}  `);
+
+} catch (error) {
+console.error('Error fetching metal prices:', error.message);
+res.status(500).json({ error: 'Error fetching metal prices' });
+}
+});
+
 
 //Getting Gold rate History
 
