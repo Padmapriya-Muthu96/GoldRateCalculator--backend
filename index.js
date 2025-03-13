@@ -2,7 +2,8 @@ const express=require('express');
 const axios=require('axios');
 const cors=require('cors')
 
-const api_key='6a1215c19cbaa16ecc3ce5ecfde3c098';
+const api_key='fb14d93c49c832be52af85d828839071';
+// const api_key='6a1215c19cbaa16ecc3ce5ecfde3c098';
 
 const app=express();
 const PORT=3000;
@@ -18,7 +19,7 @@ app.use(express.json());
   try {
     const response = await axios.get('https://api.metalpriceapi.com/v1/latest', {
       params: {
-        api_key: '6a1215c19cbaa16ecc3ce5ecfde3c098',
+        api_key: 'fb14d93c49c832be52af85d828839071',
         base: country,
         currencies: 'EUR,XAU,XAG',
       },
