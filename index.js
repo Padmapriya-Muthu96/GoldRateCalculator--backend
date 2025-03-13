@@ -6,7 +6,7 @@ const api_key='fb14d93c49c832be52af85d828839071';
 // const api_key='6a1215c19cbaa16ecc3ce5ecfde3c098';
 
 const app=express();
-const PORT=3000;
+const PORT=8000;
 app.use(cors());
 app.use(express.json());
 
@@ -123,33 +123,57 @@ res.status(500).json({ error: 'Error fetching metal prices' });
 
 //Getting Gold rate History
 
-app.post('/Gold-History', async(req,res)=>{
-  const{fromDate, endDate, countrys}=req.body;
 
-try{
-const response= await axios.get(`https://api.metalpriceapi.com/v1/timeframe?api_key=${api_key}&start_date=${fromDate}&end_date=${endDate}&base=${countrys}&currencies=XAU`)
- 
+app.post('/Gold-History', async (req, res) => {
+  const { fromDate, endDate, countrys } = req.body;
 
-  console.log(response.data.rates);
-  const historyData = response.data.rates;
+  try {
+    // Convert dates to JavaScript Date objects
+    const startDate = new Date(fromDate);
+    const endDateObj = new Date(endDate);
+    
+    // Calculate the difference in days
+    const timeDifference = endDateObj - startDate;
+    const daysDifference = timeDifference / (1000 * 60 * 60 * 24);
 
-  const formattedHistory = Object.keys(historyData).map(date => {
-    // const goldGramRate = historyData[date].XAU / 31.10;
-    const goldOuncesRate = 1/(historyData[date].XAU) ;
-    const goldGramRate = goldOuncesRate / 31.10 ;
-    const goldGramsRate = goldGramRate.toFixed(2);
-    return `${date} Gold Rate per Gram is ${goldGramsRate} ${countrys}`;
-  });
+    // Free-tier only allows 5 days max
+    if (daysDifference > 5) {
+      return res.status(400).json({ 
+        error: "Free-tier allows a maximum of 5 days per request. Reduce the date range."
+      });
+    }
 
-  console.log(formattedHistory);
-  res.json(formattedHistory);
-}
-catch(error){
-  console.error('Error fetching Gold History:', error.message);
+    // Proceed with API request if the range is valid
+    const response = await axios.get(
+      `https://api.metalpriceapi.com/v1/timeframe`, {
+        params: {
+          api_key: api_key,
+          start_date: fromDate,
+          end_date: endDate,
+          base: countrys,
+          currencies: 'XAU'
+        }
+      }
+    );
+
+    console.log(response.data.rates);
+    const historyData = response.data.rates;
+
+    const formattedHistory = Object.keys(historyData).map(date => {
+      const goldOuncesRate = 1 / historyData[date].XAU;
+      const goldGramRate = goldOuncesRate / 31.10;
+      const goldGramsRate = goldGramRate.toFixed(2);
+      return `${date} Gold Rate per Gram is ${goldGramsRate} ${countrys}`;
+    });
+
+    console.log(formattedHistory);
+    res.json(formattedHistory);
+
+  } catch (error) {
+    console.error('Error fetching Gold History:', error.message);
     res.status(500).json({ error: 'Error fetching Gold History' });
-}
-
-})
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on PORT ${PORT}`);
